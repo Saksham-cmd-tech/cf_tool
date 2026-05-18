@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cfmate"
-version = "0.1.2"
-description = "A Codeforces CLI tool — fetch, display, and test against problems."
+version = "0.1.4"
+description = "A fast Codeforces CLI tool for fetching problems and testing competitive programming solutions"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
