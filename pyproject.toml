@@ -3,12 +3,17 @@ requires = ["setuptools>=67", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cf-tool"
-version = "0.1.0"
-description = "A professional Codeforces CLI tool — fetch, display, and test against problems."
+name = "cfmate"
+version = "0.1.2"
+description = "A Codeforces CLI tool — fetch, display, and test against problems."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
+
+authors = [
+  { name = "Saksham Tale" }
+]
+
 keywords = ["codeforces", "competitive-programming", "cli"]
 
 dependencies = [
@@ -19,7 +24,10 @@ dependencies = [
 ]
 
 [project.scripts]
-cf = "cf_tool.cli:main"
+cf = "cf_tool.cli:app"
+
+[project.urls]
+Repository = "https://github.com/Saksham-cmd-tech/cf_tool.git"
 
 [tool.setuptools.packages.find]
 where = ["."]

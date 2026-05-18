@@ -1,3 +1,13 @@
+## Disclaimer
+
+This tool is not affiliated with Codeforces.
+
+It fetches publicly available problem statements for personal use only.
+Users must comply with Codeforces Terms of Service:
+https://codeforces.com/terms
+
+This tool does not store or redistribute problems beyond local caching.
+
 # cf-tool
 
 A fast, Codeforces CLI — fetch problems, display them cleanly, and test your solutions against sample cases, all from the terminal.
