@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=67", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cf-tool"
+version = "0.1.0"
+description = "A professional Codeforces CLI tool — fetch, display, and test against problems."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["codeforces", "competitive-programming", "cli"]
+
+dependencies = [
+    "typer[all]>=0.12",
+    "rich>=13.7",
+    "cloudscraper>=1.2.71",
+    "beautifulsoup4>=4.12",
+]
+
+[project.scripts]
+cf = "cf_tool.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cf_tool*"]
