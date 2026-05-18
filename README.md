@@ -8,7 +8,7 @@ https://codeforces.com/terms
 
 This tool does not store or redistribute problems beyond local caching.
 
-# cf-tool
+# cfmate
 
 A fast, Codeforces CLI — fetch problems, display them cleanly, and test your solutions against sample cases, all from the terminal.
 
@@ -28,8 +28,8 @@ A fast, Codeforces CLI — fetch problems, display them cleanly, and test your s
 ## Installation
 
 ```bash
-git clone https://github.com/yourname/cf-tool.git
-cd cf-tool
+git clone https://github.com/Saksham-cmd-tech/cf_tool.git
+cd cf_tool
 pip install -e .
 ```
 
