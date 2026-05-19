@@ -190,6 +190,29 @@ cf run solution.py -p 1829A --time-limit 2000
 
 ---
 
+### Creating Files and Folders
+
+```bash
+cf create <target> [lang]
+```
+
+Modes:
+
+```bash
+cf create 2227        # create contest2227/ folder
+cf create A py        # create 2227A.py inside current contest folder
+cf create 2227A py    # create folder + file
+```
+
+Behavior:
+
+* Creates `contest<id>/` folder if not present
+* Generates file using language template
+* Automatically infers problem ID
+* Optionally fetches and caches the problem
+
+---
+
 ### Cache Management
 
 ```bash
@@ -222,6 +245,15 @@ Each problem is stored as a JSON file:
 .cf_cache/
   ├── 1829A.json
   ├── 2227D.json
+```
+
+When using `cf create`, cache is stored inside the contest folder:
+
+```bash
+contest2227/
+  ├── 2227A.py
+  └── .cf_cache/
+      └── 2227A.json
 ```
 
 ---

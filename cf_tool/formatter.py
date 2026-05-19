@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from rich import box
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
@@ -37,20 +38,26 @@ def print_problem(problem: Problem) -> None:
     console.print()
 
     # ── Title / meta panel ──────────────────────────────────────────────────
-    meta = f"[dim]⏱  {problem.time_limit}    💾  {problem.memory_limit}[/dim]"
+    # Escape all external strings before interpolating into Rich markup.
+    safe_title    = escape(problem.title)
+    safe_limits   = escape(f"⏱  {problem.time_limit}    💾  {problem.memory_limit}")
+    safe_url      = escape(problem.url)
+    safe_id       = escape(problem.id)
+
     console.print(Panel(
-        f"[bold white]{problem.title}[/bold white]\n"
-        f"{meta}\n"
-        f"[dim link={problem.url}]{problem.url}[/dim link={problem.url}]",
-        title=f"[bold cyan]{problem.id}[/bold cyan]",
+        f"[bold white]{safe_title}[/bold white]\n"
+        f"[dim]{safe_limits}[/dim]\n"
+        f"[dim link={safe_url}]{safe_url}[/dim link={safe_url}]",
+        title=f"[bold cyan]{safe_id}[/bold cyan]",
         border_style="cyan",
         padding=(1, 2),
     ))
 
     # ── Statement ────────────────────────────────────────────────────────────
+    # Use Text() so Rich never interprets the problem content as markup tags.
     if problem.statement:
         console.print(Panel(
-            problem.statement,
+            Text(problem.statement),
             title="[bold yellow]Problem Statement[/bold yellow]",
             border_style="yellow",
             padding=(1, 2),
@@ -62,13 +69,13 @@ def print_problem(problem: Problem) -> None:
     grid.add_column(ratio=1)
     grid.add_row(
         Panel(
-            problem.input_format or "[dim]N/A[/dim]",
+            Text(problem.input_format) if problem.input_format else "[dim]N/A[/dim]",
             title="[bold green]Input Format[/bold green]",
             border_style="green",
             padding=(1, 2),
         ),
         Panel(
-            problem.output_format or "[dim]N/A[/dim]",
+            Text(problem.output_format) if problem.output_format else "[dim]N/A[/dim]",
             title="[bold green]Output Format[/bold green]",
             border_style="green",
             padding=(1, 2),
@@ -92,14 +99,18 @@ def _print_sample(index: int, tc: TestCase) -> None:
     grid.add_column(ratio=1)
     grid.add_column(ratio=1)
     grid.add_row(
-        Panel(tc.input or "[dim](empty)[/dim]",
-              title="[bold]Input[/bold]",
-              border_style="dim",
-              padding=(0, 1)),
-        Panel(tc.expected_output or "[dim](empty)[/dim]",
-              title="[bold]Expected Output[/bold]",
-              border_style="dim",
-              padding=(0, 1)),
+        Panel(
+            Text(tc.input) if tc.input else "[dim](empty)[/dim]",
+            title="[bold]Input[/bold]",
+            border_style="dim",
+            padding=(0, 1),
+        ),
+        Panel(
+            Text(tc.expected_output) if tc.expected_output else "[dim](empty)[/dim]",
+            title="[bold]Expected Output[/bold]",
+            border_style="dim",
+            padding=(0, 1),
+        ),
     )
     console.print(Panel(
         grid,
@@ -157,7 +168,7 @@ def _print_failure(result) -> None:
     """Render expected vs. actual output (or a runtime error) for a failed test."""
     if result.error:
         console.print(Panel(
-            f"[red]{result.error}[/red]",
+            escape(result.error),
             title="[bold red]Error[/bold red]",
             border_style="red",
             padding=(0, 1),
@@ -225,6 +236,65 @@ def print_info(message: str) -> None:
 def print_cached(problem_id: str) -> None:
     """Show a subtle 'loaded from cache' indicator."""
     console.print(f"[dim]  ↳ {problem_id} loaded from cache[/dim]")
+
+
+def print_created(
+    problem_id: str,
+    filepath: "Path",  # type: ignore[name-defined]  # noqa: F821
+    lang: str,
+    folder_created: bool,
+    already_inside: bool,
+) -> None:
+    """
+    Print a clean summary after cf create succeeds.
+
+    Example output:
+
+        ✓ Created  contest2227/2227A.py
+          Folder   contest2227/   (new)
+          Lang     py
+    """
+    console.print()
+
+    # Escape all dynamic values — paths can contain characters Rich
+    # would otherwise interpret as markup tags (e.g. brackets).
+    safe_path   = escape(str(filepath))
+    safe_folder = escape(filepath.parent.name or ".")
+    safe_lang   = escape(lang)
+
+    console.print(f"  [bold green]✓[/bold green]  Created  [bold cyan]{safe_path}[/bold cyan]")
+
+    # Keep everything inside a single [dim] block per line to avoid
+    # mismatched open/close tag errors from combining styles.
+    if already_inside:
+        console.print(f"     [dim]Folder   {safe_folder}/  (already here)[/dim]")
+    elif folder_created:
+        console.print(f"     [dim]Folder   {safe_folder}/  (new)[/dim]")
+    else:
+        console.print(f"     [dim]Folder   {safe_folder}/  (exists)[/dim]")
+
+    console.print(f"     [dim]Lang     [/dim][yellow]{safe_lang}[/yellow]")
+    console.print()
+
+def print_folder_created(name: str, already_existed: bool) -> None:
+    """
+    Print a message when a contest folder is created or reused.
+
+    Example:
+
+        ↳ Folder   contest2227/   (new)
+        ↳ Folder   contest2227/   (exists)
+    """
+    safe_name = escape(name)
+
+    if already_existed:
+        console.print(f"     [dim]↳ Folder   {safe_name}/  (exists)[/dim]")
+    else:
+        console.print(f"     [dim]↳ Folder   {safe_name}/  (new)[/dim]")    
+
+def print_lang_saved(lang: str) -> None:
+    """Notify user that their language preference has been saved."""
+    console.print(f"  [dim]↳ Saved [yellow]{lang}[/yellow] as your default language[/dim]")
 
 
 def print_cache_list(problem_ids: list[str]) -> None:

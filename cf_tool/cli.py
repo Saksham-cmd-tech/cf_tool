@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Optional
 
 import typer
+from rich.markup import escape
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from . import cache as cache_module
@@ -32,14 +33,18 @@ from .formatter import (
     console,
     print_cache_list,
     print_cached,
+    print_created,
     print_error,
+    print_folder_created,
     print_info,
+    print_lang_saved,
     print_problem,
     print_results,
 )
 from .parser import parse_problem
 from .runner import run_tests
 from .scraper import fetch_problem_page
+from .templates import SUPPORTED_LANGS, get_extension, get_template, resolve_lang
 from .utils import build_problem_url, parse_problem_id
 
 # ---------------------------------------------------------------------------
@@ -48,7 +53,7 @@ from .utils import build_problem_url, parse_problem_id
 
 app = typer.Typer(
     name="cf",
-    help="A developer Codeforces CLI tool.",
+    help="A professional Codeforces CLI tool.",
     add_completion=False,
     no_args_is_help=True,
 )
@@ -204,7 +209,7 @@ def run_solution(
     """
     # ── Validate file ────────────────────────────────────────────────────────
     if not file.exists():
-        print_error(f"File not found: [bold]{file}[/bold]")
+        print_error(f"File not found: [bold]{escape(str(file))}[/bold]")
         raise typer.Exit(1)
 
     # ── Resolve problem ID ───────────────────────────────────────────────────
@@ -250,6 +255,195 @@ def run_solution(
     # Non-zero exit code if any test failed (useful for CI / scripts)
     if not all(r.passed for r in results):
         raise typer.Exit(1)
+
+
+@app.command("create")
+def create_solution(
+    target: str = typer.Argument(
+        ...,
+        help=(
+            "What to create:  "
+            "[bold]2227[/bold] = folder only,  "
+            "[bold]A[/bold] = file only (inside contest folder),  "
+            "[bold]2227A[/bold] = folder + file"
+        ),
+        metavar="TARGET",
+    ),
+    lang: Optional[str] = typer.Argument(
+        None,
+        help="Language: py, cpp, c, java, js, ts, rb, go, rs. Saved as default after first use.",
+        metavar="LANG",
+    ),
+    no_fetch: bool = typer.Option(
+        False, "--no-fetch",
+        help="Skip fetching the problem into cache.",
+    ),
+) -> None:
+    """
+    Create a contest folder, a solution file, or both.
+
+    \b
+    Examples:
+        cf create 2227          # create contest2227/ folder only
+        cf create A py          # inside contest2227/, create 2227A.py
+        cf create 2227A py      # create folder + file in one shot
+        cf create B             # reuse saved language preference
+    """
+    target_upper = target.strip().upper()
+
+    # ── Determine mode from argument shape ────────────────────────────────────
+    _full   = re.match(r'^(\d+)([A-Z]\d?)$', target_upper)  # "2227A"
+    _num    = re.match(r'^\d+$',             target_upper)   # "2227"
+    _letter = re.match(r'^([A-Z]\d?)$',      target_upper)   # "A" or "A1"
+
+    if _full:
+        mode, contest_id, problem_letter = "full",   _full.group(1),   _full.group(2)
+    elif _num:
+        mode, contest_id, problem_letter = "folder", target_upper,     None
+    elif _letter:
+        mode, contest_id, problem_letter = "file",   None,             _letter.group(1)
+    else:
+        print_error(
+            f"Invalid argument [bold]{escape(target)}[/bold]. "
+            "Use a contest number ([bold]2227[/bold]), "
+            "a problem letter ([bold]A[/bold]), "
+            "or a full ID ([bold]2227A[/bold])."
+        )
+        raise typer.Exit(1)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # FOLDER MODE — cf create 2227
+    # ══════════════════════════════════════════════════════════════════════════
+    if mode == "folder":
+        folder = Path.cwd() / f"contest{contest_id}"
+        already_existed = folder.exists()
+        if not already_existed:
+            folder.mkdir()
+        print_folder_created(folder.name, already_existed=already_existed)
+        return
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # FILE MODE — cf create A [py]
+    # Must be run from inside a contest<digits> folder.
+    # ══════════════════════════════════════════════════════════════════════════
+    if mode == "file":
+        cwd_match = re.match(r'^contest(\d+)$', Path.cwd().name)
+        if not cwd_match:
+            print_error(
+                "You're not inside a contest folder. "
+                "Navigate into one first ([bold]cd contest2227[/bold]), "
+                "or use a full ID: [bold]cf create 2227A[/bold]."
+            )
+            raise typer.Exit(1)
+        contest_id = cwd_match.group(1)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # FILE CREATION — shared by "full" and "file" modes
+    # ══════════════════════════════════════════════════════════════════════════
+    normalized_id = f"{contest_id}{problem_letter}"
+
+    # ── Resolve language ──────────────────────────────────────────────────────
+    lang_is_new = False
+    if lang:
+        resolved_lang = resolve_lang(lang)
+        if resolved_lang is None:
+            print_error(
+                f"Unrecognized language '[bold]{escape(lang)}[/bold]'. "
+                f"Supported: {', '.join(SUPPORTED_LANGS)}"
+            )
+            raise typer.Exit(1)
+        lang_is_new = True
+    else:
+        resolved_lang = cache_module.get_config("preferred_lang")
+        if resolved_lang is None:
+            print_error(
+                "No language specified and no default saved yet. "
+                "Add one: [bold]cf create A py[/bold]."
+            )
+            raise typer.Exit(1)
+
+    # ── Determine target directory ────────────────────────────────────────────
+    cwd = Path.cwd()
+    contest_folder = f"contest{contest_id}"
+    already_inside = cwd.name == contest_folder
+
+    if already_inside:
+        target_dir = cwd
+        folder_created = False
+    else:
+        target_dir = cwd / contest_folder
+        folder_created = not target_dir.exists()
+        target_dir.mkdir(exist_ok=True)
+
+    # ── Create the file ───────────────────────────────────────────────────────
+    ext = get_extension(resolved_lang)
+    filepath = target_dir / f"{normalized_id}{ext}"
+
+    if filepath.exists():
+        print_error(f"[bold]{escape(str(filepath))}[/bold] already exists.")
+        raise typer.Exit(1)
+
+    filepath.write_text(
+        get_template(resolved_lang, problem_id=normalized_id),
+        encoding="utf-8",
+    )
+
+    # ── Save language preference ──────────────────────────────────────────────
+    if lang_is_new:
+        old = cache_module.get_config("preferred_lang", base_dir=target_dir)
+        cache_module.set_config("preferred_lang", resolved_lang, base_dir=target_dir)
+        if old != resolved_lang:
+            print_lang_saved(resolved_lang)
+
+    # ── Display result ────────────────────────────────────────────────────────
+    try:
+        display_path = filepath.relative_to(cwd)
+    except ValueError:
+        display_path = filepath
+
+    print_created(
+        problem_id=normalized_id,
+        filepath=display_path,
+        lang=resolved_lang,
+        folder_created=folder_created,
+        already_inside=already_inside,
+    )
+
+    # ── Warm the cache ────────────────────────────────────────────────────────
+    if not no_fetch:
+        url = build_problem_url(str(contest_id), str(problem_letter))
+        if not cache_module.load(normalized_id, base_dir=target_dir):
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console,
+                transient=True,
+            ) as progress:
+                progress.add_task(
+                    f"Fetching [bold cyan]{normalized_id}[/bold cyan] into cache…",
+                    total=None,
+                )
+                try:
+                    html = fetch_problem_page(url)
+                    problem = parse_problem(html, normalized_id, url)
+        
+                    # 🔥 THIS LINE IS CRITICAL
+                    cache_module.save(problem, base_dir=target_dir)
+        
+                    print_info(
+                        f"  ↳ Problem cached — run "
+                        f"[bold]cf run {escape(str(display_path))}[/bold] when ready"
+                    )
+                except Exception as e:
+                    print_info(
+                        f"  ↳ Failed to fetch problem: [dim]{str(e)}[/dim]\n"
+                        f"     File created anyway."
+                    )
+        else:
+            print_info(
+                f"  ↳ Problem already cached — run "
+                f"[bold]cf run {escape(str(display_path))}[/bold] when ready"
+            )
 
 
 # ---------------------------------------------------------------------------

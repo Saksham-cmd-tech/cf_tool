@@ -9,6 +9,7 @@ cf_tool/models.py
 cf_tool/parser.py
 cf_tool/runner.py
 cf_tool/scraper.py
+cf_tool/templates.py
 cf_tool/utils.py
 cfmate.egg-info/PKG-INFO
 cfmate.egg-info/SOURCES.txt
