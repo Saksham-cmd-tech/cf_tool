@@ -2,3 +2,7 @@
 testCode
 .venv
 .cf_cache
+.DS_Store
+cfmate.egg-info
+dist
+dist/*

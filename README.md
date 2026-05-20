@@ -150,6 +150,13 @@ cf run 1829A.py
 cf get <problem_id>
 ```
 
+⚠️ If `cf get` is not working or shows a loading/Cloudflare error, run:
+
+```bash
+playwright install chromium
+```
+This installs the browser required for fetching problems.
+
 Examples:
 
 ```bash

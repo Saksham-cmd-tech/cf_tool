@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "cfmate"
 version = "0.2.2"
 description = "A fast Codeforces CLI tool for fetching problems and testing competitive programming solutions"
-readme = "README.md"
+readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
 
@@ -16,18 +16,33 @@ authors = [
 
 keywords = ["codeforces", "competitive-programming", "cli"]
 
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Build Tools",
+]
+
+
 dependencies = [
     "typer[all]>=0.12",
     "rich>=13.7",
-    "cloudscraper>=1.2.71",
     "beautifulsoup4>=4.12",
+    "requests>=2.31",
+    "playwright>=1.40"
 ]
+
 
 [project.scripts]
 cf = "cf_tool.cli:app"
 
 [project.urls]
+Homepage = "https://github.com/Saksham-cmd-tech/cf_tool"
 Repository = "https://github.com/Saksham-cmd-tech/cf_tool.git"
+Issues = "https://github.com/Saksham-cmd-tech/cf_tool/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
