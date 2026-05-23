@@ -164,6 +164,10 @@ def print_results(results: list) -> None:  # results: list[TestResult]
     console.print()
 
 
+def print_success(message: str) -> None:
+    """Print a success message."""
+    console.print(f"[bold green]✔ {message}[/bold green]")
+
 def _print_failure(result) -> None:
     """Render expected vs. actual output (or a runtime error) for a failed test."""
     if result.error:
@@ -309,3 +313,71 @@ def print_cache_list(problem_ids: list[str]) -> None:
         table.add_row(pid)
 
     console.print(table)
+
+# ---------------------------------------------------------------------------
+# ADDITIONS — SAFE (NO EXISTING CODE MODIFIED)
+# ---------------------------------------------------------------------------
+
+from contextlib import contextmanager
+
+
+def print_ok(message: str) -> None:
+    """
+    Alternative success message using ✓ icon.
+
+    Does NOT replace print_success.
+    """
+    console.print(f"[bold green]✓ {message}[/bold green]")
+
+
+# ---------------------------------------------------------------------------
+# Submit UI helpers (for cf submit)
+# ---------------------------------------------------------------------------
+
+def print_submit_start(problem_id: str, lang: str) -> None:
+    """Show submission start message."""
+    console.print(
+        f"[dim]Submitting [cyan]{problem_id}[/cyan] ([yellow]{lang}[/yellow])...[/dim]"
+    )
+
+
+def print_submission_id(submission_id: str) -> None:
+    """Display submission ID."""
+    console.print(f"[dim]Submission ID: {submission_id}[/dim]")
+
+
+def print_verdict_running() -> None:
+    """Show running status."""
+    console.print("[yellow]⏳ Running...[/yellow]")
+
+
+def print_verdict_queue() -> None:
+    """Show queue status."""
+    console.print("[yellow]📦 In queue...[/yellow]")
+
+
+def print_verdict_ok() -> None:
+    """Accepted verdict."""
+    console.print("[bold green]✓ Accepted[/bold green]")
+
+
+def print_verdict_fail(verdict: str) -> None:
+    """Failure verdict."""
+    console.print(f"[bold red]✗ {verdict}[/bold red]")
+
+
+# ---------------------------------------------------------------------------
+# Spinner helper (for better UX)
+# ---------------------------------------------------------------------------
+
+@contextmanager
+def spinner(message: str):
+    """
+    Context manager for showing a spinner.
+
+    Example:
+        with spinner("Submitting..."):
+            do_work()
+    """
+    with console.status(f"[bold cyan]{message}[/bold cyan]"):
+        yield

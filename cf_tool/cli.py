@@ -32,7 +32,6 @@ from . import cache as cache_module
 from .formatter import (
     console,
     print_cache_list,
-    print_cached,
     print_created,
     print_error,
     print_folder_created,
@@ -46,6 +45,8 @@ from .runner import run_tests
 from .scraper import fetch_problem_page
 from .templates import SUPPORTED_LANGS, get_extension, get_template, resolve_lang
 from .utils import build_problem_url, parse_problem_id
+from .question import CFContest
+from .core import resolve_problem
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -65,65 +66,6 @@ app.add_typer(cache_app, name="cache")
 # ---------------------------------------------------------------------------
 # Shared helpers
 # ---------------------------------------------------------------------------
-
-
-def _resolve_problem(
-    problem_id: str,
-    *,
-    no_cache: bool = False,
-) -> "Problem":  # type: ignore[name-defined]  # noqa: F821
-    """
-    Resolve a problem ID to a Problem object.
-
-    Checks the local cache first (unless no_cache=True), then fetches
-    and parses from Codeforces, saving the result to cache.
-
-    Calls sys.exit(1) on any error, printing a clean message.
-    """
-    from .models import Problem  # local import to avoid circular
-
-    try:
-        contest_id, problem_letter = parse_problem_id(problem_id)
-    except ValueError as exc:
-        print_error(str(exc))
-        raise typer.Exit(1)
-
-    normalized = f"{contest_id}{problem_letter}"
-
-    # ── Cache hit ────────────────────────────────────────────────────────────
-    if not no_cache:
-        cached = cache_module.load(normalized)
-        if cached:
-            print_cached(normalized)
-            return cached
-
-    # ── Fetch from Codeforces ────────────────────────────────────────────────
-    url = build_problem_url(contest_id, problem_letter)
-
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console,
-        transient=True,
-    ) as progress:
-        progress.add_task(
-            f"Fetching [bold cyan]{normalized}[/bold cyan] from Codeforces…",
-            total=None,
-        )
-        try:
-            html = fetch_problem_page(url)
-        except (ConnectionError, ValueError) as exc:
-            print_error(str(exc))
-            raise typer.Exit(1)
-
-    try:
-        problem = parse_problem(html, normalized, url)
-    except ValueError as exc:
-        print_error(str(exc))
-        raise typer.Exit(1)
-
-    cache_module.save(problem)
-    return problem
 
 
 def _infer_problem_id_from_filename(file: Path) -> Optional[str]:
@@ -149,25 +91,23 @@ def _infer_problem_id_from_filename(file: Path) -> Optional[str]:
 
 @app.command("get")
 def get_problem(
-    problem_id: str = typer.Argument(
-        ...,
-        help="Problem ID, e.g. [bold]1829A[/bold] or [bold]2227D[/bold].",
-        metavar="PROBLEM_ID",
-    ),
-    no_cache: bool = typer.Option(
-        False, "--no-cache", "-n",
-        help="Bypass cache and re-fetch from Codeforces.",
-    ),
+    problem_id: str = typer.Argument(..., metavar="PROBLEM_ID"),
+    no_cache: bool = typer.Option(False, "--no-cache", "-n"),
 ) -> None:
     """
     Fetch and display a Codeforces problem.
+    Pass a contest number to browse it interactively.
 
     \b
     Examples:
-        cf get 1829A
-        cf get 2227D --no-cache
+        cf get 1829A       # fetch directly
+        cf get 2227        # browse contest 2227
     """
-    problem = _resolve_problem(problem_id, no_cache=no_cache)
+    if re.match(r'^\d+$', problem_id.strip()):
+        CFContest(problem_id.strip()).run(no_cache=no_cache)
+        return
+
+    problem = resolve_problem(problem_id, no_cache=no_cache)
     print_problem(problem)
 
 
@@ -223,7 +163,7 @@ def run_solution(
             raise typer.Exit(1)
         print_info(f"Inferred problem ID: {problem_id}")
 
-    problem = _resolve_problem(problem_id, no_cache=no_cache)
+    problem = resolve_problem(problem_id, no_cache=no_cache)
 
     if not problem.sample_tests:
         print_error(f"No sample tests found for [bold]{problem.id}[/bold].")
@@ -481,6 +421,60 @@ def cache_clear(
     else:
         console.print("[dim]Nothing to clear.[/dim]")
 
+@app.command("explore")
+def explore(
+    query: Optional[str] = typer.Option(
+        None, "-e", "--filter",
+        help="Pre-filter problems by tag or name (e.g. dp, greedy, graphs).",
+        metavar="QUERY",
+    ),
+) -> None:
+    """
+    Interactively explore Codeforces problems.
+
+    \b
+    Examples:
+        cf explore             # open with no filter
+        cf explore -e dp       # open pre-filtered to 'dp'
+        cf explore -e greedy
+    """
+    from cf_tool.explore import CFExplore
+    CFExplore().run(initial_query=query)
+
+@app.command("update")
+def update(
+    problems: bool = typer.Option(
+        False, "-p", "--problems",
+        help="Re-fetch the full problem list from Codeforces API.",
+    ),
+) -> None:
+    """
+    Update cached data.
+
+    \b
+    Examples:
+        cf update -p       # refresh global problem list
+    """
+    if not problems:
+        console.print("[dim]Nothing to update. Use [bold]cf update -p[/bold] to refresh the problem list.[/dim]")
+        return
+
+    from .cache_problems import fetch_and_cache_problems
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+        transient=True,
+    ) as progress:
+        progress.add_task("Fetching problem list from Codeforces…", total=None)
+        try:
+            problems_list = fetch_and_cache_problems()
+        except (ConnectionError, ValueError) as exc:
+            print_error(str(exc))
+            raise typer.Exit(1)
+
+    console.print(f"[green]✓[/green]  Updated — [cyan]{len(problems_list)}[/cyan] problems cached.")
 
 # ---------------------------------------------------------------------------
 # Entry point
