@@ -7,3 +7,5 @@ cfmate.egg-info
 dist
 dist/*
 contest*
+__pycache__/
+*.pyc
