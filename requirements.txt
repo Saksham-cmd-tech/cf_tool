@@ -3,3 +3,5 @@ rich>=13.7
 beautifulsoup4>=4.12
 requests>=2.31
 playwright>=1.40
+prompt-toolkit>=3.0
+rapidfuzz>=2.0

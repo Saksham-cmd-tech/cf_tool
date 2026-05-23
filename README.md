@@ -24,7 +24,95 @@ With cfmate, you can:
 * stay fully inside your development environment
 
 ---
+---
 
+## 🆕 New Features
+
+### 🔎 Problem Explorer
+
+Browse all Codeforces problems with fuzzy search:
+
+```bash
+cf explore
+```
+
+Pre-filter by tag or keyword:
+
+```bash
+cf explore -e dp
+```
+
+* Search by problem name, tags, or rating
+* Fast fuzzy matching
+* Navigate using keyboard
+* Press Enter to fetch problem instantly
+
+---
+
+### 📚 Contest Browser
+
+Open a contest and select problems interactively:
+
+```bash
+cf get 2227
+```
+
+* Shows all problems in the contest
+* Navigate with arrow keys
+* Press Enter to fetch selected problem
+
+---
+
+### 🌍 Global Problem Cache
+
+A global problem dataset is now stored at:
+
+```bash
+~/.cfmate/problems_cache.json
+```
+
+* Enables fast searching in `cf explore`
+* Loaded instantly after first fetch
+
+---
+
+### 🔄 Update Problem List
+
+Refresh the global problem dataset:
+
+```bash
+cf update -p
+```
+
+* Fetches latest problems from Codeforces API
+* Recommended occasionally to stay up-to-date
+
+---
+
+### ⚡ Enhanced Create Command
+
+Improved project scaffolding:
+
+```bash
+cf create 2227
+cf create 2227A py
+cf create A py
+```
+
+* Supports folder-only, file-only, and combined modes
+* Automatically detects contest context
+* Saves preferred language
+* Optionally pre-fetches problem into cache
+
+---
+
+### 🧠 Improved Architecture
+
+* Introduced a `core.py` module for shared logic
+* Clean separation between CLI, UI, and core logic
+* Improved maintainability and scalability
+
+---
 ## ✨ Features
 
 ### 🔍 Problem Fetching

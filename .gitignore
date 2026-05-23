@@ -6,3 +6,4 @@ testCode
 cfmate.egg-info
 dist
 dist/*
+contest*
