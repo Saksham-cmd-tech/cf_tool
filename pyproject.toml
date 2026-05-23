@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cfmate"
-version = "0.3.1"
+version = "0.3.2"
 description = "A fast Codeforces CLI tool for fetching problems and testing competitive programming solutions"
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11"
