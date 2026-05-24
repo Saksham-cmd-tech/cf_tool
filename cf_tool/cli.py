@@ -47,6 +47,7 @@ from .templates import SUPPORTED_LANGS, get_extension, get_template, resolve_lan
 from .utils import build_problem_url, parse_problem_id
 from .question import CFContest
 from .core import resolve_problem
+from .doctor import run_doctor
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -185,7 +186,7 @@ def run_solution(
     ) as progress:
         progress.add_task("Running tests…", total=None)
         try:
-            results = run_tests(file, problem.sample_tests, time_limit_ms=time_limit)
+            results = run_tests(file, problem.sample_tests, time_limit_ms=time_limit, problem_id=problem.id)
         except (FileNotFoundError, ValueError) as exc:
             print_error(str(exc))
             raise typer.Exit(1)
@@ -476,6 +477,15 @@ def update(
 
     console.print(f"[green]✓[/green]  Updated — [cyan]{len(problems_list)}[/cyan] problems cached.")
 
+@app.command("doctor")
+def doctor(
+    fix: bool = typer.Option(False, "--fix", help="Automatically fix issues")
+):
+    """
+    Diagnose cfmate environment.
+    """
+    run_doctor(fix=fix)
+    
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------

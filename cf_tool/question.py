@@ -21,6 +21,7 @@ from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.styles import Style
 
 from .cache_problems import get_problems
+from .progress import all_solved
 
 
 # ---------------------------------------------------------------------------
@@ -29,8 +30,6 @@ from .cache_problems import get_problems
 
 UI_STYLE = Style.from_dict({
     "header":        "bold #00afff",
-    "status":        "bg:#1a1a1a #555555",
-    "status.key":    "#00afff bold",
 
     "rating.gray":   "#555555",
     "rating.green":  "#00d700",
@@ -58,7 +57,7 @@ def _rating_style(rating) -> str:
 
 
 def _difficulty(rating) -> str:
-    if not rating or rating == "?": return "—    "
+    if not rating or rating == "?": return "     "
     r = int(rating)
     if r <= 1000: return "★☆☆☆☆"
     if r <= 1400: return "★★☆☆☆"
@@ -84,13 +83,16 @@ class CFContest:
 
     def load(self) -> None:
         all_problems = get_problems()
+        solved = all_solved()   # normalized uppercase set
+
         self.problems = [
             {
-                "id":     f"{p['contestId']}{p['index']}",
-                "letter": p["index"],
+                "id":     f"{p['contestId']}{p['index'].strip().upper()}",
+                "letter": p["index"].strip().upper(),
                 "name":   p["name"],
                 "rating": p.get("rating", 0),
                 "tags":   p.get("tags", []),
+                "solved": f"{p['contestId']}{p['index'].strip().upper()}" in solved,
             }
             for p in all_problems
             if str(p["contestId"]) == self.contest_id
@@ -106,9 +108,9 @@ class CFContest:
             return FormattedText([("class:rating.gray",
                                    f"  No problems found for contest {self.contest_id}.")])
 
-        total  = len(self.problems)
-        start  = max(0, min(self.index - window // 2, total - window))
-        end    = min(start + window, total)
+        total = len(self.problems)
+        start = max(0, min(self.index - window // 2, total - window))
+        end   = min(start + window, total)
 
         tokens = []
         for i in range(start, end):
@@ -118,24 +120,16 @@ class CFContest:
             tags   = p["tags"][:3]
             tag_str = "  " + "  ".join(f"#{t}" for t in tags) if tags else ""
 
-            # cursor
             tokens.append(("class:cursor",  "▶ " if sel else "  "))
-
-            # letter
             tokens.append(("class:letter",  f"{p['letter']:<4}"))
-
-            # name
-            name_style = "class:name.selected" if sel else "class:name"
-            tokens.append((name_style,       f"{p['name']:<45}"))
-
-            # rating + stars
+            tokens.append(("class:name.selected" if sel else
+                            "class:name",   f"{p['name']:<45}"))
+            tokens.append(("class:rating.green" if p["solved"] else "",
+                            " ✓  " if p["solved"] else "    "))
             r_style = _rating_style(rating)
             r_label = f"{rating:>4}" if rating else "   —"
             tokens.append((r_style, f"  {r_label}  {_difficulty(rating)}"))
-
-            # tags
             tokens.append(("class:tag", tag_str))
-
             tokens.append(("", "\n"))
 
         return FormattedText(tokens)
@@ -147,26 +141,33 @@ class CFContest:
     def run(self, no_cache: bool = False) -> None:
         self.load()
 
-        header_control = FormattedTextControl(
-            text=lambda: FormattedText([
-                ("class:header",
-                 f"  Contest {self.contest_id} — {len(self.problems)} problem(s)  "),
-            ])
-        )
-        header = Window(content=header_control, height=1)
+        solved_count = sum(1 for p in self.problems if p["solved"])
 
-        results_control = FormattedTextControl(
-            text=lambda: self.render(),
-            focusable=False,
+        header = Window(
+            content=FormattedTextControl(
+                text=lambda: FormattedText([
+                    ("class:header",
+                     f"  Contest {self.contest_id} — "
+                     f"{sum(1 for p in self.problems if p['solved'])}"
+                     f"/{len(self.problems)} solved  "),
+                ])
+            ),
+            height=1,
         )
-        results_window = Window(content=results_control)
 
-        status_control = FormattedTextControl(
-            text=lambda: FormattedText([
-                ("", f"  ↑↓ navigate  Enter fetch problem  Ctrl-C quit  —  {self.index + 1}/{len(self.problems)}  "),
-            ])
+        results_window = Window(
+            content=FormattedTextControl(text=lambda: self.render(), focusable=False),
         )
-        status = Window(content=status_control, height=1)
+
+        status = Window(
+            content=FormattedTextControl(
+                text=lambda: FormattedText([
+                    ("", f"  ↑↓ navigate  Enter fetch problem  Ctrl-C quit  —  "
+                         f"{self.index + 1}/{len(self.problems)}  "),
+                ])
+            ),
+            height=1,
+        )
 
         # ------------------------------------------------------------------
         # Key bindings

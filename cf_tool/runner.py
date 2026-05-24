@@ -157,6 +157,7 @@ def run_tests(
     file: Path,
     test_cases: list[TestCase],
     time_limit_ms: int = 5000,
+    problem_id: str | None = None,
 ) -> list[TestResult]:
     """
     Execute a solution file against every test case.
@@ -249,5 +250,10 @@ def run_tests(
                 error=f"Time limit exceeded (> {time_limit_ms} ms)",
                 elapsed_ms=elapsed_ms,
             ))
+
+        if results and all(r.passed for r in results):
+                from .progress import mark_solved
+                pid = (problem_id or file.stem).upper()
+                mark_solved(pid)
 
     return results
