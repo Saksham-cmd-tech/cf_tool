@@ -35,26 +35,37 @@ UI_STYLE = Style.from_dict({
 
 
 def _rating_style(rating: int) -> str:
-    if not rating:     return "class:rating.gray"
-    if rating <= 1200: return "class:rating.green"
-    if rating <= 1600: return "class:rating.cyan"
-    if rating <= 2000: return "class:rating.yellow"
-    if rating <= 2400: return "class:rating.orange"
-    return                    "class:rating.red"
+    if not rating:     
+        return "class:rating.gray"
+    if rating <= 1200: 
+        return "class:rating.green"
+    if rating <= 1600: 
+        return "class:rating.cyan"
+    if rating <= 2000: 
+        return "class:rating.yellow"
+    if rating <= 2400: 
+        return "class:rating.orange"
+    return "class:rating.red"
 
 
 def _rating_label(rating: int) -> str:
-    if not rating: return "   — "
+    if not rating: 
+        return "   — "
     return f"{rating:>4} "
 
 
 def _difficulty(rating: int) -> str:
-    if not rating:     return "     "
-    if rating <= 1000: return "★☆☆☆☆"
-    if rating <= 1400: return "★★☆☆☆"
-    if rating <= 1800: return "★★★☆☆"
-    if rating <= 2200: return "★★★★☆"
-    return                    "★★★★★"
+    if not rating: 
+        return "     "
+    if rating <= 1000: 
+        return "★☆☆☆☆"
+    if rating <= 1400: 
+        return "★★☆☆☆"
+    if rating <= 1800: 
+        return "★★★☆☆"
+    if rating <= 2200: 
+        return "★★★★☆"
+    return "★★★★★"
 
 
 # ---------------------------------------------------------------------------

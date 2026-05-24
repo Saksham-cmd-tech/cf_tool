@@ -20,7 +20,6 @@ Usage examples:
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 from typing import Optional
 
@@ -44,7 +43,7 @@ from .parser import parse_problem
 from .runner import run_tests
 from .scraper import fetch_problem_page
 from .templates import SUPPORTED_LANGS, get_extension, get_template, resolve_lang
-from .utils import build_problem_url, parse_problem_id
+from .utils import build_problem_url
 from .question import CFContest
 from .core import resolve_problem
 from .doctor import run_doctor

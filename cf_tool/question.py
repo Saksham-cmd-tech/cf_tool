@@ -15,7 +15,6 @@ from prompt_toolkit import Application
 from prompt_toolkit.layout import Layout
 from prompt_toolkit.layout.containers import HSplit, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
-from prompt_toolkit.widgets import TextArea
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.styles import Style
@@ -47,22 +46,32 @@ UI_STYLE = Style.from_dict({
 
 
 def _rating_style(rating) -> str:
-    if not rating or rating == "?": return "class:rating.gray"
+    if not rating or rating == "?": 
+        return "class:rating.gray"
     r = int(rating)
-    if r <= 1200: return "class:rating.green"
-    if r <= 1600: return "class:rating.cyan"
-    if r <= 2000: return "class:rating.yellow"
-    if r <= 2400: return "class:rating.orange"
+    if r <= 1200: 
+        return "class:rating.green"
+    if r <= 1600: 
+        return "class:rating.cyan"
+    if r <= 2000: 
+        return "class:rating.yellow"
+    if r <= 2400: 
+        return "class:rating.orange"
     return               "class:rating.red"
 
 
 def _difficulty(rating) -> str:
-    if not rating or rating == "?": return "     "
+    if not rating or rating == "?": 
+        return "     "
     r = int(rating)
-    if r <= 1000: return "★☆☆☆☆"
-    if r <= 1400: return "★★☆☆☆"
-    if r <= 1800: return "★★★☆☆"
-    if r <= 2200: return "★★★★☆"
+    if r <= 1000: 
+        return "★☆☆☆☆"
+    if r <= 1400: 
+        return "★★☆☆☆"
+    if r <= 1800: 
+        return "★★★☆☆"
+    if r <= 2200: 
+        return "★★★★☆"
     return               "★★★★★"
 
 
@@ -140,8 +149,6 @@ class CFContest:
 
     def run(self, no_cache: bool = False) -> None:
         self.load()
-
-        solved_count = sum(1 for p in self.problems if p["solved"])
 
         header = Window(
             content=FormattedTextControl(

@@ -10,9 +10,7 @@ from pathlib import Path
 
 import requests
 from rich.console import Console
-from rich.live import Live
 from rich.text import Text
-from rich.padding import Padding
 
 console = Console()
 

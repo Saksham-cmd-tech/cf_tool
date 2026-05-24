@@ -18,6 +18,7 @@ import time
 import random
 from typing import Optional
 
+from playwright.sync_api import ViewportSize
 import requests
 
 # ---------------------------------------------------------------------------
@@ -61,7 +62,7 @@ USER_AGENTS = [
 ]
 
 # Device profiles
-VIEWPORTS = [
+VIEWPORTS: list[ViewportSize] = [
     {"width": 1366, "height": 768},
     {"width": 1920, "height": 1080},
     {"width": 1440, "height": 900},
