@@ -20,6 +20,7 @@ from typing import Optional
 
 from playwright.sync_api import ViewportSize
 import requests
+from .formatter import print_info
 
 # ---------------------------------------------------------------------------
 # USER AGENTS (OS-level rotation)
@@ -99,7 +100,7 @@ def ensure_playwright_browser():
             b = p.chromium.launch(headless=True)
             b.close()
     except Exception:
-        print("Installing Playwright Chromium...")
+        print_info("Installing Playwright Chromium...")
         subprocess.run(["playwright", "install", "chromium"], check=True)
 
 
@@ -237,7 +238,7 @@ def fetch_problem_page(url: str, retries: int = 3, timeout: int = 20) -> str:
 
         # Fallback
         try:
-            print("↳ Using browser fallback...")
+            print_info("↳ Using browser fallback...")
             return _fetch_with_playwright(url, timeout)
         except Exception as e:
             last_exc = e
