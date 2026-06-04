@@ -1,3 +1,23 @@
+## v0.5.0 (2026-06-04)
+
+### Feat
+
+- add explorer filters, contest browser, global cache update, solved tracking, and doctor diagnostics
+- enhance UI for contest browser
+- improve UI for explore command
+
+### Fix
+
+- **runner**: prevent premature problem solving mark Moved the logic that marks a problem as solved outside of the test case evaluation loop. Previously, if a problem had multiple test cases and passed the first one, it was incorrectly marked as solved immediately even if subsequent test cases failed.
+- resolve syntax errors in code
+- correct commitizen bump configuration in .cz.toml
+
+### Refactor
+
+- **ui**: centralize terminal outputs and standardize style
+- extract problem resolution logic into core module
+- extract problem resolution logic into core module
+
 ## v0.4.0 (2026-05-24)
 
 ### Features
