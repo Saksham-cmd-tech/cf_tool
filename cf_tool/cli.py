@@ -38,6 +38,10 @@ from .formatter import (
     print_lang_saved,
     print_problem,
     print_results,
+    print_cache_cleared,
+    print_cache_nothing_to_clear,
+    print_update_nothing,
+    print_update_success,
 )
 from .parser import parse_problem
 from .runner import run_tests
@@ -419,9 +423,9 @@ def cache_clear(
     count = cache_module.clear(problem_id)
     if count:
         noun = "problem" if count == 1 else "problems"
-        console.print(f"[green]Cleared {count} cached {noun}.[/green]")
+        print_cache_cleared(count, noun)
     else:
-        console.print("[dim]Nothing to clear.[/dim]")
+        print_cache_nothing_to_clear()
 
 @app.command("explore")
 def explore(
@@ -458,7 +462,7 @@ def update(
         cf update -p       # refresh global problem list
     """
     if not problems:
-        console.print("[dim]Nothing to update. Use [bold]cf update -p[/bold] to refresh the problem list.[/dim]")
+        print_update_nothing()
         return
 
     from .cache_problems import fetch_and_cache_problems
@@ -476,7 +480,7 @@ def update(
             print_error(str(exc))
             raise typer.Exit(1)
 
-    console.print(f"[green]✓[/green]  Updated — [cyan]{len(problems_list)}[/cyan] problems cached.")
+    print_update_success(len(problems_list))
 
 @app.command("doctor")
 def doctor(

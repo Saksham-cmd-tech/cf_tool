@@ -3,11 +3,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Dict
-
 import browser_cookie3
-from rich.console import Console
 
-console = Console()
+from .formatter import print_success, print_info
 
 CF_DIR = Path.home() / ".cfmate"
 SESSION_FILE = CF_DIR / "session.json"
@@ -19,14 +17,14 @@ def _save_session(data: Dict[str, str]) -> None:
     CF_DIR.mkdir(parents=True, exist_ok=True)
     with open(SESSION_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
-    console.print("[green]✓ Session saved[/green]")
+    print_success("Session saved")
 
 
 def create_session() -> None:
     """
     Create a session automatically from Chrome cookies.
     """
-    console.print("[cyan]Creating session from Chrome cookies...[/cyan]")
+    print_info("Creating session from Chrome cookies...")
 
     try:
         cj = browser_cookie3.chrome(domain_name="codeforces.com")
@@ -41,14 +39,14 @@ def create_session() -> None:
         raise RuntimeError("No Codeforces session found in Chrome. Please log in first.")
 
     _save_session(session)
-    console.print("[green]✓ Session created successfully[/green]")
+    print_success("Session created successfully")
 
 
 def create_session_manual() -> None:
     """
     Manual fallback: paste cookies yourself.
     """
-    console.print("[cyan]Manual session creation[/cyan]")
+    print_info("Manual session creation")
     jsession = input("JSESSIONID: ").strip()
     c39 = input("39ce7: ").strip()
     cf_clearance = input("cf_clearance: ").strip()
@@ -63,7 +61,7 @@ def create_session_manual() -> None:
     }
 
     _save_session(session)
-    console.print("[green]✓ Session created successfully[/green]")
+    print_success("Session created successfully")
 
 
 def load_session() -> Dict[str, str]:
@@ -76,6 +74,6 @@ def load_session() -> Dict[str, str]:
 def delete_session() -> None:
     if SESSION_FILE.exists():
         SESSION_FILE.unlink()
-        console.print("[green]✓ Session deleted[/green]")
+        print_success("Session deleted")
     else:
-        console.print("[yellow]No session found[/yellow]")
+        print_info("No session found")
