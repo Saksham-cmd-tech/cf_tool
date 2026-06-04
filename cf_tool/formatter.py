@@ -167,7 +167,7 @@ def print_results(results: list) -> None:  # results: list[TestResult]
 
 def print_success(message: str) -> None:
     """Print a success message."""
-    console.print(f"[bold green]✔ {message}[/bold green]")
+    console.print(f"[bold green]✓ {message}[/bold green]")
 
 def _print_failure(result) -> None:
     """Render expected vs. actual output (or a runtime error) for a failed test."""
@@ -316,28 +316,32 @@ def print_cache_list(problem_ids: list[str]) -> None:
     console.print(table)
 
 # ---------------------------------------------------------------------------
-# ADDITIONS — SAFE (NO EXISTING CODE MODIFIED)
+# CLI Helpers
 # ---------------------------------------------------------------------------
 
+def print_cache_cleared(count: int, noun: str) -> None:
+    console.print(f"[bold green]✓ Cleared {count} cached {noun}.[/bold green]")
 
-def print_ok(message: str) -> None:
-    """
-    Alternative success message using ✓ icon.
+def print_cache_nothing_to_clear() -> None:
+    console.print("[dim]Nothing to clear.[/dim]")
 
-    Does NOT replace print_success.
-    """
-    console.print(f"[bold green]✓ {message}[/bold green]")
+def print_update_nothing() -> None:
+    console.print("[dim]Nothing to update. Use [bold]cf update -p[/bold] to refresh the problem list.[/dim]")
+
+def print_update_success(count: int) -> None:
+    console.print(f"  [bold green]✓[/bold green]  Updated — [cyan]{count}[/cyan] problems cached.")
 
 
 # ---------------------------------------------------------------------------
 # Submit UI helpers (for cf submit)
 # ---------------------------------------------------------------------------
 
-def print_submit_start(problem_id: str, lang: str) -> None:
+def print_submit_start(problem_id: str, lang: str = "") -> None:
     """Show submission start message."""
-    console.print(
-        f"[dim]Submitting [cyan]{problem_id}[/cyan] ([yellow]{lang}[/yellow])...[/dim]"
-    )
+    if lang:
+        console.print(f"[dim]Submitting [cyan]{problem_id}[/cyan] ([yellow]{lang}[/yellow])...[/dim]")
+    else:
+        console.print(f"[dim]Submitting [cyan]{problem_id}[/cyan]...[/dim]")
 
 
 def print_submission_id(submission_id: str) -> None:

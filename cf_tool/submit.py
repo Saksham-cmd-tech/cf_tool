@@ -7,11 +7,8 @@ from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
-from rich.console import Console
-
 from .auth import load_session
-
-console = Console()
+from .formatter import print_submit_start, print_success, print_submission_id
 
 CF_BASE = "https://codeforces.com"
 
@@ -107,7 +104,7 @@ def submit(file_path: str) -> None:
     lang_id = _detect_lang(file)
     code = file.read_text(encoding="utf-8")
 
-    console.print(f"[cyan]Submitting {contest_id}{problem}...[/cyan]")
+    print_submit_start(f"{contest_id}{problem}")
 
     session = requests.Session()
     session.cookies.update(load_session())
@@ -188,8 +185,8 @@ def submit(file_path: str) -> None:
             f"Response snippet:\n{snippet}"
         )
 
-    console.print("[green]✔ Submitted successfully![/green]")
+    print_success("Submitted successfully!")
 
     m = re.search(r"/submission/(\d+)", text)
     if m:
-        console.print(f"[dim]Submission ID: {m.group(1)}[/dim]")
+        print_submission_id(m.group(1))
