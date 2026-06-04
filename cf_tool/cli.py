@@ -47,6 +47,8 @@ from .utils import build_problem_url
 from .question import CFContest
 from .core import resolve_problem
 from .doctor import run_doctor
+from .submit import submit
+from .auth import create_session, create_session_manual, delete_session
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -484,7 +486,23 @@ def doctor(
     Diagnose cfmate environment.
     """
     run_doctor(fix=fix)
-    
+
+@app.command("submit")
+def submit_cmd(file: str):
+    submit(file)
+
+
+@app.command("login")
+def login_cmd(auto: bool = typer.Option(False, "--auto", help="Create session from Chrome cookies")):
+    if auto:
+        create_session()
+    else:
+        create_session_manual()
+
+@app.command("logout")
+def logout_cmd():
+    delete_session()
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------

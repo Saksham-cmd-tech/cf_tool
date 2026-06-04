@@ -251,9 +251,9 @@ def run_tests(
                 elapsed_ms=elapsed_ms,
             ))
 
-        if results and all(r.passed for r in results):
-                from .progress import mark_solved
-                pid = (problem_id or file.stem).upper()
-                mark_solved(pid)
+    if results and all(r.passed for r in results):
+        from .progress import mark_solved
+        pid = (problem_id or file.stem).upper()
+        mark_solved(pid)
 
     return results
